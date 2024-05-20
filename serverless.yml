@@ -66,25 +66,32 @@ custom:
 #  environment:
 #    variable1: value1
 
-# you can add packaging information here
-#package:
-#  include:
-#    - include-me.js
-#    - include-me-dir/**
-#  exclude:
-#    - exclude-me.js
-#    - exclude-me-dir/**
+package:
+  individually: true
+  exclude:
+    - node_modules/**
+    - .git/**
+    - .vscode/**
 
-#functions:
-#  hello:
-#    handler: handler.hello
-#    The following are a few example events you can configure
-#    NOTE: Please make sure to change your handler code to work with those events
-#    Check the event documentation for details
-#    events:
-#      - http:
-#          path: users/create
-#          method: get
+functions:
+  getProductsList:
+    handler: src/handlers/getProducts.handler
+    #    The following are a few example events you can configure
+    #    NOTE: Please make sure to change your handler code to work with those events
+    #    Check the event documentation for details
+    events:
+      - http:
+          path: products
+          method: get
+  getProductById:
+    handler: src/handlers/getProductsById.handler
+    # #    The following are a few example events you can configure
+    # #    NOTE: Please make sure to change your handler code to work with those events
+    # #    Check the event documentation for details
+    events:
+      - http:
+          path: products/{productId}
+          method: get
 #      - websocket: $connect
 #      - s3: ${env:BUCKET}
 #      - schedule: rate(10 minutes)
