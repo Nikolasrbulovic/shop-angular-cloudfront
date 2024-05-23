@@ -25,24 +25,28 @@ provider:
   runtime: nodejs18.x
   ## this is my personal AWS account. This must be skipped in you serverless.yml
   ##profile: Dzonatan
-  iamRoleStatements:
-    - Effect: "Allow"
-      Action:
-        - "s3:ListBucket"
-      Resource:
-        {
-          "Fn::Join":
-            ["", ["arn:aws:s3:::", { "Ref": "ServerlessDeploymentBucket" }]],
-        }
-    - Effect: "Allow"
-      Action:
-        - "s3:PutObject"
-      Resource:
-        Fn::Join:
-          - ""
-          - - "arn:aws:s3:::"
-            - "Ref": "ServerlessDeploymentBucket"
-            - "/*"
+  iam:
+    role:
+      statements:
+        - Effect: "Allow"
+          Action:
+            - "s3:ListBucket"
+          Resource:
+            Fn::Join:
+              ["", ["arn:aws:s3:::", { Ref: "ServerlessDeploymentBucket" }]]
+        - Effect: "Allow"
+          Action:
+            - "s3:PutObject"
+          Resource:
+            Fn::Join:
+              - ""
+              - - "arn:aws:s3:::"
+                - Ref: "ServerlessDeploymentBucket"
+                - "/*"
+        - Effect: "Allow"
+          Action:
+            - "lambda:InvokeFunction"
+          Resource: "*"
 plugins:
   - serverless-finch
   - serverless-single-page-app-plugin
@@ -51,11 +55,11 @@ custom:
   ## Serverless-finch configuration
   client:
     bucketName: shopangularcloudfront
-    distributionFolder: build
+    distributionFolder: dist/app/browser
     indexDocument: index.html
     manageResources: false
   ## Serverless-single-page-app-plugin configuration:
-  s3LocalPath: ${self:custom.client.distributionFolder}/
+  s3LocalPath: dist/app/browser
   s3BucketName: ${self:custom.client.bucketName}
 
 # you can overwrite defaults here
@@ -68,30 +72,11 @@ custom:
 
 package:
   individually: true
-  exclude:
-    - node_modules/**
-    - .git/**
-    - .vscode/**
+  patterns:
+    - "!node_modules/**"
+    - "src/**"
 
 functions:
-  getProductsList:
-    handler: src/handlers/getProducts.handler
-    #    The following are a few example events you can configure
-    #    NOTE: Please make sure to change your handler code to work with those events
-    #    Check the event documentation for details
-    events:
-      - http:
-          path: products
-          method: get
-  getProductById:
-    handler: src/handlers/getProductsById.handler
-    # #    The following are a few example events you can configure
-    # #    NOTE: Please make sure to change your handler code to work with those events
-    # #    Check the event documentation for details
-    events:
-      - http:
-          path: products/{productId}
-          method: get
 #      - websocket: $connect
 #      - s3: ${env:BUCKET}
 #      - schedule: rate(10 minutes)
@@ -133,9 +118,7 @@ resources:
       Type: AWS::S3::Bucket
       Properties:
         BucketName: ${self:custom.s3BucketName}
-        OwnershipControls:
-          Rules:
-            - ObjectOwnership: BucketOwnerEnforced
+        AccessControl: PublicRead
         WebsiteConfiguration:
           IndexDocument: index.html
           ErrorDocument: index.html
@@ -153,7 +136,9 @@ resources:
             - Sid: "AllowCloudFrontAccessIdentity"
               Effect: Allow
               Action: s3:GetObject
-              Resource: arn:aws:s3:::${self:custom.s3BucketName}/*
+              Resource:
+                - arn:aws:s3:::shopangularcloudfront
+                - arn:aws:s3:::shopangularcloudfront/*
               Principal:
                 AWS:
                   Fn::Join:
