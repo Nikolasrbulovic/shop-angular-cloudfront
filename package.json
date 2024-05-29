@@ -71,6 +71,7 @@
     "prettier": "^3.2.5",
     "pretty-quick": "^4.0.0",
     "serverless-finch": "^4.0.4",
+    "serverless-offline": "^13.6.0",
     "serverless-single-page-app-plugin": "^1.0.4",
     "typescript": "~5.3.3"
   },

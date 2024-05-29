@@ -1,0 +1,10 @@
+{
+  "name": "my-lambda-function-import",
+  "version": "1.0.0",
+  "description": "Lambda function to import csv",
+  "main": "handler.js",
+  "dependencies": {
+    "aws-sdk": "^2.1047.0",
+    "csv-parser": "^3.0.0"
+  }
+}
