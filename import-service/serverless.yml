@@ -44,6 +44,20 @@ provider:
           Action:
             - s3:GetObject
           Resource: "arn:aws:s3:::my-import-bucket1/uploaded/*"
+        - Effect: "Allow"
+          Action:
+            - "sqs:SendMessage"
+            - "sqs:ReceiveMessage"
+            - "sqs:DeleteMessage"
+          Resource: "arn:aws:sqs:us-east-1:471112551028:catalogItemsQueue"
+        - Effect: Allow
+          Action:
+            - "sns:Publish"
+          Resource: arn:aws:sns:us-east-1:471112551028:createProductTopic
+        - Effect: "Allow"
+          Action:
+            - "dynamodb:PutItem"
+          Resource: "arn:aws:dynamodb:us-east-1:471112551028:table/products"
 
 # you can overwrite defaults here
 #  stage: dev
@@ -100,3 +114,38 @@ functions:
           rules:
             - prefix: uploaded/
           existing: true
+  catalogBatchProcess:
+    handler: catalogBatchProcess.handler
+    events:
+      - sqs:
+          arn:
+            Fn::GetAtt: [catalogItemsQueue, Arn]
+          batchSize: 5
+
+resources:
+  Resources:
+    catalogItemsQueue:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: catalogItemsQueue
+        VisibilityTimeout: 30
+        RedrivePolicy:
+          deadLetterTargetArn:
+            "Fn::GetAtt": [catalogItemsDeadLetterQueue, Arn]
+          maxReceiveCount: 5
+    catalogItemsDeadLetterQueue:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: catalogItemsDeadLetterQueue
+    createProductTopic:
+      Type: AWS::SNS::Topic
+      Properties:
+        TopicName: createProductTopic
+
+    emailSubscription:
+      Type: AWS::SNS::Subscription
+      Properties:
+        Protocol: email
+        TopicArn:
+          Ref: createProductTopic
+        Endpoint: n.srbulovic@hotmail.com
