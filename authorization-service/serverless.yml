@@ -1,0 +1,45 @@
+service: authorization-service
+frameworkVersion: "3"
+plugins:
+  - serverless-dotenv-plugin
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  environment:
+    Nikolasrbulovic: ${env:Nikolasrbulovic}
+  iam:
+    role:
+      statements:
+        - Effect: "Allow"
+          Action:
+            - "lambda:InvokeFunction"
+          Resource: "*"
+  logs:
+    restApi: true
+
+functions:
+  basicAuthorizer:
+    handler: basicAuthorizer.handler
+    environment:
+      Nikolasrbulovic: ${env:Nikolasrbulovic}
+
+resources:
+  Resources:
+    GatewayResponseDefault4XX:
+      Type: "AWS::ApiGateway::GatewayResponse"
+      Properties:
+        ResponseParameters:
+          gatewayresponse.header.Access-Control-Allow-Origin: "'*'"
+        ResponseType: DEFAULT_4XX
+        RestApiId:
+          Ref: ApiGatewayRestApi
+    ApiGatewayRestApi:
+      Type: AWS::ApiGateway::RestApi
+      Properties:
+        Name: AuthorizationServiceApi
+
+custom:
+  dotenv:
+    path: .env
+    logging: true

@@ -1,11 +1,13 @@
 import { Injectable } from '@angular/core';
 import { EMPTY, Observable } from 'rxjs';
 import { ApiService } from '../../core/api.service';
-import { switchMap } from 'rxjs/operators';
+import { map, switchMap } from 'rxjs/operators';
 
+const authorizationToken = 'Tmlrb2xhc3JidWxvdmljPVRFU1RfUEFTU1dPUkQK';
 @Injectable()
 export class ManageProductsService extends ApiService {
   uploadProductsCSV(file: File): Observable<unknown> {
+    console.log('test2');
     if (!this.endpointEnabled('import')) {
       console.warn(
         'Endpoint "import" is disabled. To enable change your environment.ts config',
@@ -13,25 +15,37 @@ export class ManageProductsService extends ApiService {
       return EMPTY;
     }
 
+    if (!authorizationToken) {
+      console.error('Authorization token not found in localStorage');
+      return EMPTY;
+    }
     return this.getPreSignedUrl(file.name).pipe(
-      switchMap((url) =>
-        this.http.put(url, file, {
+      switchMap((url) => {
+        return this.http.put(url, file, {
           headers: {
-            // eslint-disable-next-line @typescript-eslint/naming-convention
+            Authorization: `Basic ${authorizationToken}`,
             'Content-Type': 'text/csv',
           },
-        }),
-      ),
+        });
+      }),
     );
   }
 
   private getPreSignedUrl(fileName: string): Observable<string> {
     const url = this.getUrl('import', 'import');
-
-    return this.http.get<string>(url, {
-      params: {
-        name: fileName,
-      },
-    });
+    if (!authorizationToken) {
+      console.error('Authorization token not found in localStorage');
+      return EMPTY;
+    }
+    return this.http
+      .get<{ url: string }>(url, {
+        params: {
+          name: fileName,
+        },
+        headers: {
+          Authorization: `Basic ${authorizationToken}`,
+        },
+      })
+      .pipe(map((response) => response.url));
   }
 }
