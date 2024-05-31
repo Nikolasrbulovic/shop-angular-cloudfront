@@ -4,7 +4,6 @@ const csv = require("csv-parser");
 const SQS = new AWS.SQS();
 
 module.exports.handler = async (event) => {
-  console.log("Event:", JSON.stringify(event, null, 2));
   const bucket = "my-import-bucket1";
   const key = "products.csv";
   const queueUrl =
@@ -27,6 +26,7 @@ module.exports.handler = async (event) => {
         })
         .on("end", async () => {
           console.log("CSV file successfully processed");
+
           for (const record of records) {
             await SQS.sendMessage({
               QueueUrl: queueUrl,
