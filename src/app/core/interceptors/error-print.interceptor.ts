@@ -15,19 +15,28 @@ export class ErrorPrintInterceptor implements HttpInterceptor {
 
   intercept(
     request: HttpRequest<unknown>,
-    next: HttpHandler
+    next: HttpHandler,
   ): Observable<HttpEvent<unknown>> {
     return next.handle(request).pipe(
       tap({
         error: () => {
-          const url = new URL(request.url);
+          // const url = new URL(request.url);
 
-          this.notificationService.showError(
-            `Request to "${url.pathname}" failed. Check the console for the details`,
-            0
-          );
+          // this.notificationService.showError(
+          //   `Request to "${url.pathname}" failed. Check the console for the details`,
+          //   0
+          // );
+          try {
+            const url = new URL(request.url);
+            this.notificationService.showError(
+              `Request to "${url.pathname}" failed. Check the console for the details`,
+              0,
+            );
+          } catch (error) {
+            console.error('Error while parsing URL:', error);
+          }
         },
-      })
+      }),
     );
   }
 }
